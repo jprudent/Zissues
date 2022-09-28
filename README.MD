@@ -2,7 +2,7 @@ Use github issues as a zettlekasten system. It's a simpler wiki
 
 ## How it works? 
 
-The Github Web UI is used as a backend for writing, editing and consulting issues.
+The Github Web UI is used as a backend for writing, editing and consulting cards.
 The mobile application can also be used. 
 
 This backend is quite powerful:
