@@ -16,7 +16,7 @@ This backend is quite powerful:
 - no need to install anything, available anywhere 
 - cards can be searched by title, content, tags
 
-I made an option tool suite that 
+I made an option tool suite that can export the system as a big self contained HTML file (images are embedded). 
 
 
 
