@@ -20,7 +20,7 @@ I made an option tool suite that can export the system as a big self contained H
 
 You need to install [babashka](https://github.com/babashka/babashka).
 
-This command will export all the issues in a self contained HTML file (could be heavy)
+This command will export all the issues in a self contained HTML file (could be heavy, and that's ugly for now)
 
 > bb --classpath . -m zissues export-to-html --repo jprudent/jprudent.github.com --output-file /tmp/a.html
 
