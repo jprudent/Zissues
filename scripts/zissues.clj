@@ -37,27 +37,32 @@
                          :vf #(json/parse-string (:body %) keyword)
                          :kf #(next-nav-link (get (:headers %) "link")))))
 
+(defonce get-all-issues-cached (memoize get-all-issues))
+
 (defn encode-b64 [bytes] (-> (Base64/getEncoder) (.encodeToString bytes)))
 (defn image-src-to-b64 [src]
       (println "Embedding image" src)
       (str "data:image/" (fs/extension src) ";base64,"
            (encode-b64 (:body (curl/get src {:as :bytes})))))
 
+(defonce image-src-to-b64-cached (memoize image-src-to-b64))
+
 (defn embed-images
       [html]
       (let [srcs (re-seq #"https://user-images.githubusercontent.com[^\"']+" html)]
            (reduce (fn [acc src]
-                       (str/replace-first acc src (image-src-to-b64 src)))
+                       (str/replace-first acc src (image-src-to-b64-cached src)))
                    html srcs)))
 
 (defn make-page-content
       [issue]
       [:article
-       [:h1 (:title issue)]
-       [:p [:a {:id (:number issue), :href (:html_url issue)} "Go to original content"]]
-       [:p (map (fn [label] [:a {:href (:url label)} (:name label)]) (:labels issue))]
-       [:p (or (str "on " (:updated_at issue)) (:created_at issue))]
-       (html-util/raw-string (embed-images (md/md-to-html-string (:body issue))))])
+       [:header
+        [:h1 (:title issue)]
+        [:div [:a {:id (:number issue), :href (:html_url issue)} "Go to original content"]]
+        [:nav [:ul (map (fn [label] [:li [:a {:href (str/replace-first (:url label) "api.github.com/repos" "github.com")} (:name label)]]) (:labels issue))]]]
+       (html-util/raw-string (embed-images (md/md-to-html-string (:body issue))))
+       [:footer [:p (or (str "last edit on " (:updated_at issue)) (:created_at issue))]]])
 
 (defn make-toc-entry
       [issue]
@@ -69,14 +74,17 @@
 
 (defn export-html
       [{:keys [repo output-file]}]
-      (let [all-issues (get-all-issues (str "https://api.github.com/repos/" repo "/issues"))
-            nav [:nav [:ul (map make-toc-entry all-issues)]]
+      (let [all-issues (get-all-issues-cached (str "https://api.github.com/repos/" repo "/issues"))
+            nav [:aside [:nav [:ul (map make-toc-entry all-issues)]]]
             articles (map make-page-content all-issues)
             html-file (html/html [:html
                                   [:head
+                                   [:link {:rel "stylesheet" :href "https://unpkg.com/@picocss/pico@latest/css/pico.min.css"}]
                                    [:title "Jerome issues backup"]
                                    [:meta {:generated date-str}]]
-                                  [:body nav articles]])]
+                                  [:body {:style "width: 900px"}
+                                   nav
+                                   articles]])]
            (spit output-file html-file)))
 
 ;; -- CLI
